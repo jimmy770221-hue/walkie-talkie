@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>對講機</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#10151c;color:#e8eef5;font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
+#app{max-width:480px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100%}
+h1{margin:4px 0 0;font-size:22px;text-align:center}
+#status{text-align:center;font-size:15px;color:#9fb3c8;min-height:22px}
+#status.ok{color:#5fdc8a}
+#status.err{color:#ff7b7b}
+#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+#grid button{padding:14px 0;font-size:18px;font-weight:700;border-radius:10px;border:2px solid #2b3a4c;background:#1a2330;color:#cfe0f2}
+#grid button.on{background:#2f7df6;border-color:#6aa6ff;color:#fff}
+#ptt{flex:1;min-height:220px;border-radius:24px;border:none;font-size:28px;font-weight:800;background:#2a3544;color:#8ea2b8;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+#ptt:not(:disabled){background:#1f9d55;color:#fff}
+#ptt.talk{background:#e5484d;box-shadow:0 0 0 6px rgba(229,72,77,.35)}
+#modes{display:flex;gap:8px}
+#modes button{flex:1;padding:12px 0;font-size:15px;border-radius:10px;border:2px solid #2b3a4c;background:#1a2330;color:#cfe0f2}
+#modes button.on{border-color:#6aa6ff;background:#23405f;color:#fff}
+#tip{font-size:13px;color:#7d90a6;text-align:center;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>📻 對講機</h1>
+  <div id="status">請選擇頻道</div>
+  <div id="grid"></div>
+  <button id="ptt" disabled>請先選頻道</button>
+  <div id="modes">
+    <button data-m="hold" class="on">按住說話</button>
+    <button data-m="toggle">點一下開／關</button>
+  </div>
+  <div id="tip">用藍牙耳機時：按耳機上的「播放／暫停」鍵，就是開始／停止說話。<br>建議全程戴耳機，避免回音。</div>
+  <audio id="keep" playsinline></audio>
+  <div id="sinks"></div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+const PREFIX = 'zhuai-walkie-';
+const pad = n => String(n).padStart(2, '0');
+
+let myStream = null, peer = null, curCh = null, session = 0;
+let talking = false, mode = 'hold', wakeLock = null;
+let calls = {}, audios = {}, members = {};
+
+/* ---------- 畫面 ---------- */
+function setStatus(t, cls) { const s = $('status'); s.textContent = t; s.className = cls || ''; }
+function peerCount() { return Object.keys(calls).length + 1; }
+function refreshStatus() { if (curCh) setStatus('已連線：頻道 ' + pad(curCh) + '　目前 ' + peerCount() + ' 人', 'ok'); }
+function refreshPttLabel() {
+  const b = $('ptt');
+  if (!curCh) { b.textContent = '請先選頻道'; return; }
+  b.textContent = talking ? '說話中…' : (mode === 'hold' ? '按住說話' : '點一下說話');
+}
+
+const grid = $('grid');
+for (let i = 1; i <= 10; i++) {
+  const b = document.createElement('button');
+  b.textContent = pad(i);
+  b.onclick = () => joinChannel(i);
+  grid.appendChild(b);
+}
+function markChannel() {
+  [...grid.children].forEach((b, i) => b.classList.toggle('on', curCh === i + 1));
+}
+
+document.querySelectorAll('#modes button').forEach(b => {
+  b.onclick = () => {
+    mode = b.dataset.m;
+    document.querySelectorAll('#modes button').forEach(x => x.classList.toggle('on', x === b));
+    setTalking(false);
+  };
+});
+
+/* ---------- 發話 ---------- */
+function setTalking(on) {
+  talking = on && !!curCh;
+  if (myStream) myStream.getAudioTracks().forEach(t => t.enabled = talking);
+  $('ptt').classList.toggle('talk', talking);
+  refreshPttLabel();
+}
+const ptt = $('ptt');
+ptt.addEventListener('pointerdown', e => {
+  e.preventDefault();
+  if (!curCh) return;
+  try { ptt.setPointerCapture(e.pointerId); } catch (_) {}
+  if (mode === 'hold') setTalking(true); else setTalking(!talking);
+});
+['pointerup', 'pointercancel'].forEach(ev => ptt.addEventListener(ev, () => { if (mode === 'hold') setTalking(false); }));
+ptt.addEventListener('contextmenu', e => e.preventDefault());
+
+/* ---------- 藍牙耳機按鍵（媒體鍵） ---------- */
+function makeSilentWav() {
+  const rate = 8000, n = rate, buf = new ArrayBuffer(44 + n), v = new DataView(buf);
+  const w = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
+  w(36, 'data'); v.setUint32(40, n, true);
+  new Uint8Array(buf, 44).fill(128);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+function setupMediaKeys() {
+  const a = $('keep');
+  if (!a.src) { a.src = makeSilentWav(); a.loop = true; a.volume = 0.01; }
+  a.play().catch(() => {});
+  if (!('mediaSession' in navigator)) return;
+  try {
+    navigator.mediaSession.metadata = new MediaMetadata({ title: '對講機 頻道 ' + pad(curCh), artist: '按播放／暫停鍵＝說話開關' });
+    const toggle = () => { setTalking(!talking); a.play().catch(() => {}); navigator.mediaSession.playbackState = 'playing'; };
+    navigator.mediaSession.setActionHandler('play', toggle);
+    navigator.mediaSession.setActionHandler('pause', toggle);
+    navigator.mediaSession.playbackState = 'playing';
+  } catch (_) {}
+}
+
+/* ---------- 連線 ---------- */
+function playStream(id, stream) {
+  let a = audios[id];
+  if (!a) {
+    a = document.createElement('audio');
+    a.autoplay = true; a.playsInline = true;
+    $('sinks').appendChild(a);
+    audios[id] = a;
+  }
+  a.srcObject = stream;
+  a.play().catch(() => {});
+}
+function removePeer(id) {
+  delete calls[id];
+  if (audios[id]) { audios[id].srcObject = null; audios[id].remove(); delete audios[id]; }
+  refreshStatus();
+}
+function attachCall(call) {
+  calls[call.peer] = call;
+  call.on('stream', s => { playStream(call.peer, s); refreshStatus(); });
+  call.on('close', () => removePeer(call.peer));
+  call.on('error', () => removePeer(call.peer));
+}
+function callPeer(id) {
+  if (!peer || id === peer.id || calls[id]) return;
+  attachCall(peer.call(id, myStream));
+}
+
+function destroyPeer() {
+  Object.keys(calls).forEach(id => { try { calls[id].close(); } catch (_) {} removePeer(id); });
+  members = {};
+  if (peer) { try { peer.destroy(); } catch (_) {} peer = null; }
+}
+
+function rejoin(s) {
+  if (s !== session || !curCh) return;
+  const ch = curCh;
+  destroyPeer();
+  setStatus('重新連線中…');
+  const ns = ++session;
+  setTimeout(() => { if (ns === session && curCh === ch) start(ch, ns); }, 400 + Math.random() * 1400);
+}
+
+function start(ch, s) {
+  if (typeof Peer === 'undefined') { setStatus('無法載入連線元件，請確認網路', 'err'); return; }
+  const hubId = PREFIX + pad(ch) + '-hub';
+  setStatus('連線中…');
+  // 先試著當房主；如果頻道已經有人，就改當成員
+  const p = new Peer(hubId);
+  peer = p;
+  p.on('open', () => {
+    if (s !== session) return;
+    p.on('connection', conn => {
+      conn.on('open', () => {
+        conn.send({ t: 'peers', list: [p.id, ...Object.keys(members)] });
+        members[conn.peer] = conn;
+      });
+      conn.on('close', () => { delete members[conn.peer]; removePeer(conn.peer); });
+    });
+    refreshStatus();
+  });
+  p.on('call', call => { call.answer(myStream); attachCall(call); });
+  p.on('error', e => {
+    if (s !== session) return;
+    if (e.type === 'unavailable-id') { p.destroy(); startMember(ch, s); }
+    else if (e.type === 'peer-unavailable') rejoin(s);
+    else if (e.type === 'browser-incompatible') setStatus('這個瀏覽器不支援', 'err');
+    else { setStatus('網路不穩，重新連線中…', 'err'); rejoin(s); }
+  });
+  p.on('disconnected', () => { if (s === session) { try { p.reconnect(); } catch (_) {} } });
+}
+
+function startMember(ch, s) {
+  const hubId = PREFIX + pad(ch) + '-hub';
+  const p = new Peer();
+  peer = p;
+  p.on('open', () => {
+    if (s !== session) return;
+    const conn = p.connect(hubId, { reliable: true });
+    conn.on('data', m => { if (m && m.t === 'peers') m.list.forEach(callPeer); refreshStatus(); });
+    conn.on('close', () => rejoin(s));
+    refreshStatus();
+  });
+  p.on('call', call => { call.answer(myStream); attachCall(call); });
+  p.on('error', e => {
+    if (s !== session) return;
+    if (e.type === 'browser-incompatible') setStatus('這個瀏覽器不支援', 'err');
+    else { setStatus('網路不穩，重新連線中…', 'err'); rejoin(s); }
+  });
+  p.on('disconnected', () => { if (s === session) { try { p.reconnect(); } catch (_) {} } });
+}
+
+async function joinChannel(ch) {
+  if (curCh === ch) return;
+  if (!myStream) {
+    try {
+      myStream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true } });
+    } catch (e) {
+      setStatus('無法使用麥克風，請允許權限（網址要是 https）', 'err');
+      return;
+    }
+  }
+  myStream.getAudioTracks().forEach(t => t.enabled = false);
+  setTalking(false);
+  destroyPeer();
+  curCh = ch;
+  const s = ++session;
+  markChannel();
+  $('ptt').disabled = false;
+  refreshPttLabel();
+  setupMediaKeys();
+  requestWake();
+  start(ch, s);
+}
+
+async function requestWake() {
+  try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
+}
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && curCh) requestWake(); });
+</script>
+</body>
+</html>
