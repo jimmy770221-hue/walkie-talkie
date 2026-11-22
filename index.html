@@ -72,7 +72,14 @@ let calls = {}, audios = {}, members = {};
 
 /* ---------- 畫面 ---------- */
 function setStatus(t, cls) { const s = $('status'); s.textContent = t; s.className = cls || ''; }
-function peerCount() { return Object.keys(calls).length + 1; }
+function liveCalls() {
+  return Object.keys(calls).filter(id => {
+    const pc = calls[id].peerConnection;
+    const st = pc && pc.iceConnectionState;
+    return !st || st === 'new' || st === 'checking' || st === 'connected' || st === 'completed';
+  });
+}
+function peerCount() { return liveCalls().length + 1; }
 function refreshStatus() { if (curCh) setStatus('已連線：頻道 ' + pad(curCh) + '　目前 ' + peerCount() + ' 人', 'ok'); }
 function refreshPttLabel() {
   const b = $('ptt');
@@ -256,6 +263,18 @@ async function joinChannel(ch) {
   requestWake();
   start(ch, s);
 }
+
+// 定時清掉已經斷掉的人，並更新人數
+setInterval(() => {
+  Object.keys(calls).forEach(id => {
+    const pc = calls[id].peerConnection;
+    const st = pc && pc.iceConnectionState;
+    if (st === 'failed' || st === 'closed') removePeer(id);
+  });
+  refreshStatus();
+}, 2000);
+// 離開或重新整理頁面時，主動斷線，讓別人馬上知道
+window.addEventListener('pagehide', () => { try { destroyPeer(); } catch (_) {} });
 
 async function requestWake() {
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
