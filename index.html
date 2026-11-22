@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>對講機</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#1b1d21">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="對講機">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;min-height:100%;color:#e8e8e8;font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
@@ -280,6 +287,18 @@ async function requestWake() {
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && curCh) requestWake(); });
+
+// App 安裝與自動更新：每次開啟都先抓最新版
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {});
+  let hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController) { hadController = true; return; }
+    if (!curCh) location.reload();   // 沒在頻道裡才自動重新載入，避免打斷通話
+  });
+}
 </script>
 </body>
 </html>
