@@ -12,44 +12,116 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <style>
+:root,[data-theme="classic"]{
+--page1:#2c3036;--page2:#111316;--body1:#3d4148;--body2:#25282d;--body3:#1a1c20;--edge:#0b0c0e;--hi:rgba(255,255,255,.14);
+--brand:#f4a62a;--well:#14161a;--grille-a:#0a0b0d;--grille-b:#30343a;
+--lcd1:#bcd48a;--lcd2:#9fba6c;--lcdtx:#1d2a0f;--lcdok:#17450a;--lcderr:#8a1b12;--lcdglow:0 0 0 0 transparent;
+--key1:#4b5058;--key2:#32363c;--keytx:#ececec;--keyon1:#ffb94d;--keyon2:#f08a00;--keyontx:#2a1700;
+--ptt1:#ffc766;--ptt2:#f08a00;--ptt3:#b85f00;--pttsh:#7a3f00;--pttx:#2a1700;
+--off1:#5d6067;--off2:#3a3d43;--offsh:#1c1e22;--offtx:#a0a3aa;
+--talk1:#ff7d73;--talk2:#e5322b;--talk3:#a3150f;--talksh:#5c0b07;--talktx:#fff;--talkring:rgba(255,59,48,.3);
+--modetx:#8d9199;--modeon:#ffb94d;--tip:#7f848d;--ant1:#0b0c0e;--ant2:#30343a;--ledoff:#3d1c1c;--ledon:#ff3b30;
+}
+[data-theme="army"]{
+--page1:#2a3020;--page2:#0f120a;--body1:#5f7048;--body2:#43512f;--body3:#2e3a20;--edge:#141a0b;--hi:rgba(255,255,255,.16);
+--brand:#e3cf86;--well:#1d2415;--grille-a:#10150a;--grille-b:#55663f;
+--lcd1:#e0cd85;--lcd2:#c4ac55;--lcdtx:#2b2208;--lcdok:#3d3205;--lcderr:#8a1b12;
+--key1:#8d8863;--key2:#6a6547;--keytx:#f6f1d6;--keyon1:#ffd25e;--keyon2:#e0a000;--keyontx:#2b2000;
+--ptt1:#f6e48f;--ptt2:#d9b43c;--ptt3:#a8841a;--pttsh:#6b520c;--pttx:#2b2208;
+--off1:#6c7558;--off2:#4b5340;--offsh:#1d2415;--offtx:#b6bf9f;
+--modetx:#b4bf98;--modeon:#ffd25e;--tip:#b3bd98;--ant1:#141a0b;--ant2:#55663f;
+}
+[data-theme="police"]{
+--page1:#1e3258;--page2:#080e1c;--body1:#3d65a4;--body2:#294a86;--body3:#19305a;--edge:#08112a;--hi:rgba(255,255,255,.2);
+--brand:#ffd34d;--well:#0f1a33;--grille-a:#070d1b;--grille-b:#3a5a96;
+--lcd1:#b4e2f4;--lcd2:#85c8e6;--lcdtx:#0b2a3a;--lcdok:#0b4a2c;--lcderr:#8a1b12;
+--key1:#eef3fb;--key2:#bcc9df;--keytx:#1a2c4d;--keyon1:#ffd95e;--keyon2:#f0a800;--keyontx:#2a1f00;
+--ptt1:#ffe784;--ptt2:#ffc400;--ptt3:#c79200;--pttsh:#7a5a00;--pttx:#2a1f00;
+--off1:#6a7b99;--off2:#4a5a78;--offsh:#1a2438;--offtx:#c0cce0;
+--modetx:#9fb3d6;--modeon:#1a2c4d;--tip:#b4c6e6;--ant1:#08112a;--ant2:#3a5a96;
+}
+[data-theme="retro"]{
+--page1:#5a4a33;--page2:#1f180f;--body1:#f1e8d3;--body2:#dccfb2;--body3:#c2b394;--edge:#4a3f2a;--hi:rgba(255,255,255,.5);
+--brand:#b3261e;--well:#5a4a33;--grille-a:#33291a;--grille-b:#8a7757;
+--lcd1:#bdd68f;--lcd2:#a3c074;--lcdtx:#1f2c10;--lcdok:#17450a;--lcderr:#8a1b12;
+--key1:#7e684a;--key2:#5c4a32;--keytx:#f6edd8;--keyon1:#ea5a48;--keyon2:#b3261e;--keyontx:#fff;
+--ptt1:#ff7a69;--ptt2:#d6372a;--ptt3:#9c1c12;--pttsh:#5a0f09;--pttx:#fff;
+--off1:#a89878;--off2:#8a7a5c;--offsh:#5a4a33;--offtx:#e8dcc0;
+--talk1:#ffd36e;--talk2:#ffb000;--talk3:#c98400;--talksh:#7a5000;--talktx:#3a2400;--talkring:rgba(255,176,0,.4);
+--modetx:#e0d2b0;--modeon:#ffe0a8;--tip:#6b5a3f;--ant1:#33291a;--ant2:#8a7757;
+}
+[data-theme="cute"]{
+--page1:#ffe3ef;--page2:#f2a6c6;--body1:#ffc9de;--body2:#ff9fc4;--body3:#ec78a8;--edge:#9a3563;--hi:rgba(255,255,255,.55);
+--brand:#8a2c58;--well:#c0507f;--grille-a:#a63a68;--grille-b:#ffb8d3;
+--lcd1:#dcf7e8;--lcd2:#aee9c8;--lcdtx:#17503a;--lcdok:#0e5a36;--lcderr:#a3150f;
+--key1:#fff7fb;--key2:#ffd6e6;--keytx:#8a2c58;--keyon1:#ffe66e;--keyon2:#ffc400;--keyontx:#5a3a00;
+--ptt1:#b6ecff;--ptt2:#4fc3f7;--ptt3:#1e88c9;--pttsh:#0f5a85;--pttx:#fff;
+--off1:#e3a9c2;--off2:#c98aa8;--offsh:#8a4a68;--offtx:#fff;
+--modetx:#ffe8f1;--modeon:#8a2c58;--tip:#7a2450;--ant1:#9a3563;--ant2:#ffb8d3;
+}
+[data-theme="neon"]{
+--page1:#1d1040;--page2:#05020d;--body1:#2a1f55;--body2:#1a1238;--body3:#0f0a26;--edge:#05030d;--hi:rgba(160,120,255,.25);
+--brand:#00f0ff;--well:#07040f;--grille-a:#05030d;--grille-b:#2f1f6a;
+--lcd1:#0c3238;--lcd2:#071a1f;--lcdtx:#38f2ff;--lcdok:#5dff9b;--lcderr:#ff6b8a;--lcdglow:0 0 14px rgba(0,240,255,.4);
+--key1:#2d2358;--key2:#1c1540;--keytx:#d6c8ff;--keyon1:#ff5fe0;--keyon2:#c000a8;--keyontx:#fff;
+--ptt1:#ff86ea;--ptt2:#e020c0;--ptt3:#8a0f78;--pttsh:#4a0640;--pttx:#fff;
+--off1:#3a3464;--off2:#241f44;--offsh:#0e0b22;--offtx:#8a80c0;
+--talk1:#8ffbff;--talk2:#00d4e6;--talk3:#00808c;--talksh:#004850;--talktx:#05222a;--talkring:rgba(0,240,255,.35);
+--modetx:#8d83c8;--modeon:#00f0ff;--tip:#8478c0;--ant1:#05030d;--ant2:#3a2a80;--ledon:#00f0ff;
+}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
 html,body{margin:0;min-height:100%;color:#e8e8e8;font-family:-apple-system,"PingFang TC","Noto Sans TC",sans-serif}
-body{display:flex;justify-content:center;background:radial-gradient(circle at 50% 0%,#2c3036,#111316 70%)}
+body{display:flex;justify-content:center;background:radial-gradient(circle at 50% 0%,var(--page1),var(--page2) 70%)}
 #app{width:100%;max-width:380px;min-height:100vh;min-height:100dvh;padding:56px 14px 16px;position:relative;display:flex;flex-direction:column}
-#antenna{position:absolute;top:6px;left:44px;width:24px;height:70px;border-radius:12px 12px 4px 4px;background:linear-gradient(90deg,#0b0c0e,#30343a 45%,#0b0c0e);box-shadow:0 2px 6px rgba(0,0,0,.6)}
-#body{flex:1;display:flex;flex-direction:column;gap:12px;padding:16px 14px 18px;border-radius:34px 34px 46px 46px;background:linear-gradient(160deg,#3d4148,#25282d 55%,#1a1c20);border:2px solid #0b0c0e;box-shadow:inset 0 2px 0 rgba(255,255,255,.14),0 18px 40px rgba(0,0,0,.65)}
-#top{display:flex;align-items:center;justify-content:space-between;padding:0 6px}
-#brand{font-size:14px;letter-spacing:6px;color:#f4a62a;font-weight:800}
-#txled{width:14px;height:14px;border-radius:50%;background:#3d1c1c;box-shadow:inset 0 0 3px #000}
-body:has(#ptt.talk) #txled{background:#ff3b30;box-shadow:0 0 12px 3px #ff3b30}
-#speaker{height:48px;border-radius:12px;background:repeating-linear-gradient(90deg,#0a0b0d 0 6px,#30343a 6px 9px);box-shadow:inset 0 3px 8px rgba(0,0,0,.85)}
-#lcd{display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;border:3px solid #0b0c0e;background:linear-gradient(#bcd48a,#9fba6c);color:#1d2a0f;font-family:"Courier New",monospace;box-shadow:inset 0 0 14px rgba(0,0,0,.35)}
+#antenna{position:absolute;top:6px;left:44px;width:24px;height:70px;border-radius:12px 12px 4px 4px;background:linear-gradient(90deg,var(--ant1),var(--ant2) 45%,var(--ant1));box-shadow:0 2px 6px rgba(0,0,0,.6)}
+#body{flex:1;display:flex;flex-direction:column;gap:12px;padding:16px 14px 18px;border-radius:34px 34px 46px 46px;background:linear-gradient(160deg,var(--body1),var(--body2) 55%,var(--body3));border:2px solid var(--edge);box-shadow:inset 0 2px 0 var(--hi),0 18px 40px rgba(0,0,0,.65)}
+#top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 6px}
+#brand{font-size:14px;letter-spacing:6px;color:var(--brand);font-weight:800}
+#skinbtn{margin-left:auto;border:none;border-radius:999px;padding:6px 12px;font-size:12px;font-weight:700;color:var(--modetx);background:var(--well);box-shadow:inset 0 2px 5px rgba(0,0,0,.5)}
+#txled{width:14px;height:14px;border-radius:50%;background:var(--ledoff);box-shadow:inset 0 0 3px #000}
+body:has(#ptt.talk) #txled{background:var(--ledon);box-shadow:0 0 12px 3px var(--ledon)}
+#speaker{height:48px;border-radius:12px;background:repeating-linear-gradient(90deg,var(--grille-a) 0 6px,var(--grille-b) 6px 9px);box-shadow:inset 0 3px 8px rgba(0,0,0,.85)}
+#lcd{display:flex;align-items:center;gap:12px;padding:8px 14px;border-radius:12px;border:3px solid var(--edge);background:linear-gradient(var(--lcd1),var(--lcd2));color:var(--lcdtx);font-family:"Courier New",monospace;box-shadow:inset 0 0 14px rgba(0,0,0,.35),var(--lcdglow)}
 #lcd .lbl{font-size:12px;font-weight:700;opacity:.7}
 #chnum{font-size:64px;font-weight:900;line-height:1;letter-spacing:2px}
-#status{flex:1;text-align:right;font-size:14px;font-weight:700;line-height:1.5;color:#1d2a0f}
-#status.ok{color:#17450a}
-#status.err{color:#8a1b12}
-#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px;border-radius:14px;background:#14161a;box-shadow:inset 0 2px 6px rgba(0,0,0,.75)}
-#grid button{aspect-ratio:1.15;font-size:18px;font-weight:800;border:none;border-radius:10px;color:#ececec;background:linear-gradient(#4b5058,#32363c);box-shadow:0 3px 0 #0b0c0e,inset 0 1px 0 rgba(255,255,255,.18)}
-#grid button:active{transform:translateY(2px);box-shadow:0 1px 0 #0b0c0e}
-#grid button.on{background:linear-gradient(#ffb94d,#f08a00);color:#2a1700}
+#status{flex:1;text-align:right;font-size:14px;font-weight:700;line-height:1.5;color:var(--lcdtx)}
+#status.ok{color:var(--lcdok)}
+#status.err{color:var(--lcderr)}
+#grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;padding:10px;border-radius:14px;background:var(--well);box-shadow:inset 0 2px 6px rgba(0,0,0,.75)}
+#grid button{aspect-ratio:1.15;font-size:18px;font-weight:800;border:none;border-radius:10px;color:var(--keytx);background:linear-gradient(var(--key1),var(--key2));box-shadow:0 3px 0 var(--edge),inset 0 1px 0 rgba(255,255,255,.18)}
+#grid button:active{transform:translateY(2px);box-shadow:0 1px 0 var(--edge)}
+#grid button.on{background:linear-gradient(var(--keyon1),var(--keyon2));color:var(--keyontx)}
 #pttwrap{flex:1;display:flex;align-items:center;justify-content:center;min-height:190px}
-#bezel{padding:14px;border-radius:50%;background:#14161a;box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
-#ptt{display:block;width:min(52vw,200px);aspect-ratio:1;border:none;border-radius:50%;font-size:22px;font-weight:900;letter-spacing:2px;color:#2a1700;touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:radial-gradient(circle at 35% 30%,#ffc766,#f08a00 60%,#b85f00);box-shadow:0 8px 0 #7a3f00,0 14px 22px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.4)}
-#ptt:disabled{color:#a0a3aa;background:radial-gradient(circle at 35% 30%,#5d6067,#3a3d43);box-shadow:0 8px 0 #1c1e22,0 14px 22px rgba(0,0,0,.5)}
-#ptt.talk{color:#fff;transform:translateY(6px);background:radial-gradient(circle at 35% 30%,#ff7d73,#e5322b 60%,#a3150f);box-shadow:0 2px 0 #5c0b07,0 0 0 8px rgba(255,59,48,.3)}
-#modes{display:flex;gap:4px;padding:4px;border-radius:12px;background:#14161a;box-shadow:inset 0 2px 6px rgba(0,0,0,.75)}
-#modes button{flex:1;padding:10px 0;font-size:14px;font-weight:700;border:none;border-radius:9px;background:transparent;color:#8d9199}
-#modes button.on{color:#ffb94d;background:linear-gradient(#4b5058,#32363c);box-shadow:0 2px 0 #0b0c0e}
-#tip{font-size:12px;line-height:1.7;text-align:center;color:#7f848d}
+#bezel{padding:14px;border-radius:50%;background:var(--well);box-shadow:inset 0 3px 8px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.08)}
+#ptt{display:block;width:min(52vw,200px);aspect-ratio:1;border:none;border-radius:50%;font-size:22px;font-weight:900;letter-spacing:2px;color:var(--pttx);touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;background:radial-gradient(circle at 35% 30%,var(--ptt1),var(--ptt2) 60%,var(--ptt3));box-shadow:0 8px 0 var(--pttsh),0 14px 22px rgba(0,0,0,.6),inset 0 2px 4px rgba(255,255,255,.4)}
+#ptt:disabled{color:var(--offtx);background:radial-gradient(circle at 35% 30%,var(--off1),var(--off2));box-shadow:0 8px 0 var(--offsh),0 14px 22px rgba(0,0,0,.5)}
+#ptt.talk{color:var(--talktx);transform:translateY(6px);background:radial-gradient(circle at 35% 30%,var(--talk1),var(--talk2) 60%,var(--talk3));box-shadow:0 2px 0 var(--talksh),0 0 0 8px var(--talkring)}
+#modes{display:flex;gap:4px;padding:4px;border-radius:12px;background:var(--well);box-shadow:inset 0 2px 6px rgba(0,0,0,.75)}
+#modes button{flex:1;padding:10px 0;font-size:14px;font-weight:700;border:none;border-radius:9px;background:transparent;color:var(--modetx)}
+#modes button.on{color:var(--modeon);background:linear-gradient(var(--key1),var(--key2));box-shadow:0 2px 0 var(--edge)}
+#tip{font-size:12px;line-height:1.7;text-align:center;color:var(--tip)}
 #keep,#sinks{display:none}
+#skinpanel{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.6)}
+#skinsheet{width:100%;max-width:420px;max-height:82vh;overflow:auto;padding:16px 16px 24px;border-radius:20px 20px 0 0;background:#1c1f24;color:#eee}
+#skinhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;font-size:16px;font-weight:800}
+#skinclose{border:none;border-radius:50%;width:32px;height:32px;font-size:16px;color:#ddd;background:#2c3036}
+#skinlist{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.skincard{border:2px solid #2c3036;border-radius:14px;padding:8px;background:#23272d;color:#eee;font-size:14px;font-weight:700;text-align:center}
+.skincard.on{border-color:#ffb94d}
+.skincard span{display:block;margin-top:6px}
+.mini{position:relative;height:92px;border-radius:12px;border:2px solid var(--edge);background:linear-gradient(160deg,var(--body1),var(--body2) 60%,var(--body3))}
+.mini i{position:absolute;display:block}
+.m-lcd{left:10px;right:10px;top:12px;height:20px;border-radius:5px;background:linear-gradient(var(--lcd1),var(--lcd2))}
+.m-keys{left:10px;right:10px;top:40px;height:12px;border-radius:3px;background:repeating-linear-gradient(90deg,var(--key1) 0 14px,transparent 14px 18px)}
+.m-ptt{bottom:8px;left:50%;width:26px;height:26px;margin-left:-13px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--ptt1),var(--ptt2) 60%,var(--ptt3))}
 </style>
 </head>
 <body>
 <div id="app">
   <div id="antenna"></div>
   <div id="body">
-    <div id="top"><span id="brand">對講機</span><span id="txled"></span></div>
+    <div id="top"><span id="brand">對講機</span><button id="skinbtn" type="button">🎨 換面板</button><span id="txled"></span></div>
     <div id="speaker"></div>
     <div id="lcd">
       <div><div class="lbl">頻道 CH</div><div id="chnum">--</div></div>
@@ -62,6 +134,12 @@ body:has(#ptt.talk) #txled{background:#ff3b30;box-shadow:0 0 12px 3px #ff3b30}
       <button data-m="toggle">點一下開／關</button>
     </div>
     <div id="tip">用藍牙耳機：按「播放／暫停」鍵＝開始／停止說話<br>建議全程戴耳機，避免回音</div>
+  </div>
+  <div id="skinpanel" hidden>
+    <div id="skinsheet">
+      <div id="skinhead"><span>選擇面板</span><button id="skinclose" type="button">✕</button></div>
+      <div id="skinlist"></div>
+    </div>
   </div>
   <audio id="keep" playsinline></audio>
   <div id="sinks"></div>
@@ -287,6 +365,32 @@ async function requestWake() {
   try { if ('wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen'); } catch (_) {}
 }
 document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible' && curCh) requestWake(); });
+
+// 換面板：選擇後記住，下次打開還是這一款
+const SKINS = [['classic', '經典黑橘'], ['army', '軍綠'], ['police', '警用藍'], ['retro', '復古米白'], ['cute', '可愛粉'], ['neon', '霓虹紫']];
+const SKIN_KEY = 'walkie-skin';
+function applySkin(id) {
+  if (!SKINS.some(s => s[0] === id)) id = 'classic';
+  document.body.dataset.theme = id;
+  try { localStorage.setItem(SKIN_KEY, id); } catch (_) {}
+  const c = getComputedStyle(document.body).getPropertyValue('--body2').trim();
+  const m = document.querySelector('meta[name=theme-color]');
+  if (m && c) m.setAttribute('content', c);
+  document.querySelectorAll('.skincard').forEach(b => b.classList.toggle('on', b.dataset.skin === id));
+}
+SKINS.forEach(([id, name]) => {
+  const b = document.createElement('button');
+  b.type = 'button'; b.className = 'skincard'; b.dataset.skin = id;
+  b.innerHTML = '<div class="mini" data-theme="' + id + '"><i class="m-lcd"></i><i class="m-keys"></i><i class="m-ptt"></i></div><span>' + name + '</span>';
+  b.onclick = () => { applySkin(id); $('skinpanel').hidden = true; };
+  $('skinlist').appendChild(b);
+});
+$('skinbtn').onclick = () => { $('skinpanel').hidden = false; };
+$('skinclose').onclick = () => { $('skinpanel').hidden = true; };
+$('skinpanel').addEventListener('click', e => { if (e.target === $('skinpanel')) $('skinpanel').hidden = true; });
+let savedSkin = 'classic';
+try { savedSkin = localStorage.getItem(SKIN_KEY) || 'classic'; } catch (_) {}
+applySkin(savedSkin);
 
 // App 安裝與自動更新：每次開啟都先抓最新版
 if ('serviceWorker' in navigator) {
